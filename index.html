@@ -10,6 +10,56 @@
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+    /* ── LOADING SCREEN ─────────────────────────── */
+    #loader {
+      position: fixed; inset: 0; z-index: 100;
+      background: var(--beige);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px;
+      transition: opacity 0.8s ease;
+    }
+    #loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loader-name {
+      font-family: 'Dancing Script', cursive;
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      color: var(--red);
+    }
+    .loader-name span { color: var(--gold); }
+    .loader-hearts {
+      display: flex; gap: 10px;
+    }
+    .loader-hearts i {
+      font-style: normal;
+      font-size: 1.1rem;
+      color: var(--red);
+      opacity: 0;
+      animation: popIn 1.2s ease infinite;
+    }
+    .loader-hearts i:nth-child(1) { animation-delay: 0s; }
+    .loader-hearts i:nth-child(2) { animation-delay: 0.25s; }
+    .loader-hearts i:nth-child(3) { animation-delay: 0.5s; }
+    @keyframes popIn {
+      0%,100% { opacity: 0; transform: scale(0.5); }
+      40%,60%  { opacity: 1; transform: scale(1.3); }
+    }
+    .loader-bar-wrap {
+      width: min(180px, 50vw);
+      height: 2px;
+      background: rgba(107,15,15,0.12);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .loader-bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--red), var(--gold));
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
     :root {
       --gold:      #C9A84C;
       --gold-lt:   #E8C97A;
@@ -420,6 +470,19 @@
 <body>
 
 <!-- ══════════════════════════════════════════
+     LOADING SCREEN
+══════════════════════════════════════════ -->
+<div id="loader">
+  <div class="loader-name">Lena <span>&amp;</span> Eldho</div>
+  <div class="loader-hearts">
+    <i>♥</i><i>♥</i><i>♥</i>
+  </div>
+  <div class="loader-bar-wrap">
+    <div class="loader-bar" id="loaderBar"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
      SCREEN 1 — LANDING
 ══════════════════════════════════════════ -->
 <div id="s1" class="screen active">
@@ -644,6 +707,33 @@
 
 
 <script>
+  // ── Loading screen ──────────────────────────────
+  const loader    = document.getElementById('loader');
+  const loaderBar = document.getElementById('loaderBar');
+  const allImgs   = Array.from(document.images);
+  let loaded = 0;
+
+  function imgLoaded() {
+    loaded++;
+    const pct = Math.round((loaded / allImgs.length) * 100);
+    loaderBar.style.width = pct + '%';
+    if (loaded >= allImgs.length) {
+      setTimeout(() => loader.classList.add('hidden'), 400);
+    }
+  }
+
+  if (allImgs.length === 0) {
+    loader.classList.add('hidden');
+  } else {
+    allImgs.forEach(img => {
+      if (img.complete) imgLoaded();
+      else {
+        img.addEventListener('load',  imgLoaded);
+        img.addEventListener('error', imgLoaded); // count errors too so we don't hang
+      }
+    });
+  }
+
   // ── Floating hearts on landing ──────────────────
   const fhc = document.getElementById('s1-hearts');
   for (let i = 0; i < 14; i++) {
